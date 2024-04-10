@@ -33,6 +33,7 @@
 
 #include <gst_bridge/rosbasesink.h>
 
+#include <gst_bridge_tpp.h>
 
 GST_DEBUG_CATEGORY_STATIC (rosbasesink_debug_category);
 #define GST_CAT_DEFAULT rosbasesink_debug_category
@@ -350,6 +351,8 @@ static GstFlowReturn rosbasesink_render (GstBaseSink * base_sink, GstBuffer * bu
   // XXX look at the base sink clock synchronising features
   base_time = gst_element_get_base_time(GST_ELEMENT(sink));
   msg_time = rclcpp::Time(GST_BUFFER_PTS(buf) + base_time + sink->ros_clock_offset, sink->clock->get_clock_type());
+
+  lttng_ust_tracepoint(gst_bridge, gst_sink_render, static_cast<const void *>(sink_class), msg_time.nanoseconds());
 
   if(NULL != sink_class->render)
     return sink_class->render(sink, buf, msg_time);

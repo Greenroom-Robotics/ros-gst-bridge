@@ -22,6 +22,10 @@ if($ENV{CLION_IDE})
   set(audio_msgs_DIR "${PROJECT_SOURCE_DIR}/../../../install/audio_msgs/share/audio_msgs/cmake")
 endif()
 
+if(NOT TRACETOOLS_TRACEPOINTS_EXCLUDED)
+  find_package(PkgConfig REQUIRED)
+  pkg_check_modules(LTTNG REQUIRED lttng-ust)
+endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
@@ -32,7 +36,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
 # find gstreamer
 set(gstreamer_components app pbutils audio fft net)
-find_package(GStreamer 1.8.3 REQUIRED COMPONENTS ${gstreamer_components})
+find_package(GStreamer REQUIRED COMPONENTS ${gstreamer_components})
 
 # find glib
 set(glib_components gio gio-unix gobject gthread gmodule)
@@ -93,6 +97,7 @@ target_include_directories(rosgstbridge PRIVATE
   ${GSTREAMER_INCLUDE_DIRS}
   ${GSTREAMER_BASE_INCLUDE_DIRS}
   ${GST_INCLUDE_DIRS}
+  ${LTTNG_LIBRARIES}
 )
 
 target_link_libraries(rosgstbridge PUBLIC

@@ -37,7 +37,6 @@
 #include <gst_bridge/rosimagesink.h>
 
 
-
 GST_DEBUG_CATEGORY_STATIC (rosimagesink_debug_category);
 #define GST_CAT_DEFAULT rosimagesink_debug_category
 
