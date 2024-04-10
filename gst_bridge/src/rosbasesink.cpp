@@ -290,6 +290,8 @@ static gboolean rosbasesink_open (RosBaseSink * sink)
   opts.context(sink->ros_context); //set a context to generate the node in
   sink->node = std::make_shared<rclcpp::Node>(std::string(sink->node_name), std::string(sink->node_namespace), opts);
 
+  lttng_ust_tracepoint(gst_bridge, gst_sink_open, static_cast<const void *>(sink->node->get_node_base_interface()->get_rcl_node_handle()), static_cast<const void *>(sink));
+
   auto ex_args = rclcpp::ExecutorOptions();
   ex_args.context = sink->ros_context;
   sink->ros_executor = std::make_shared<rclcpp::executors::SingleThreadedExecutor>(ex_args);
