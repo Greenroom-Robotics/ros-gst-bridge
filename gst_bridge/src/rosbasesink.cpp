@@ -33,7 +33,7 @@
 
 #include <gst_bridge/rosbasesink.h>
 
-#include <gst_bridge_tpp.h>
+#include "gst_bridge_tpp.h"
 
 GST_DEBUG_CATEGORY_STATIC (rosbasesink_debug_category);
 #define GST_CAT_DEFAULT rosbasesink_debug_category

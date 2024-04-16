@@ -16,7 +16,7 @@
  */
 
 TRACEPOINT_EVENT(
-  TRACEPOINT_PROVIDER,
+  LTTNG_UST_TRACEPOINT_PROVIDER,
   gst_sink_render,
   TP_ARGS(
     const void *, ros_base_sink_handle_arg,
@@ -29,7 +29,7 @@ TRACEPOINT_EVENT(
 )
 
 TRACEPOINT_EVENT(
-  TRACEPOINT_PROVIDER,
+  LTTNG_UST_TRACEPOINT_PROVIDER,
   gst_sink_open,
   TP_ARGS(
     const void *, node_handle_arg,
