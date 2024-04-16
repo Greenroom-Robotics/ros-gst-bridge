@@ -24,9 +24,9 @@ endif()
 
 find_package(PkgConfig REQUIRED)
 
-if(NOT TRACETOOLS_TRACEPOINTS_EXCLUDED)
-  pkg_check_modules(LTTNG REQUIRED lttng-ust)
-endif()
+# if(NOT TRACETOOLS_TRACEPOINTS_EXCLUDED)
+pkg_search_module(lttng-ust REQUIRED IMPORTED_TARGET lttng-ust)
+# endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
@@ -72,6 +72,7 @@ add_library(rosgstbridge SHARED
   src/rosaudiosrc.cpp
   src/rosimagesrc.cpp
   src/rostextsrc.cpp
+  src/gst_bridge_tpp.cpp
 )
 
 # ament has a habit of pruning unused linked functions required by gstreamer
@@ -81,10 +82,10 @@ target_include_directories(rosgstbridge PRIVATE
   ${sensor_msgs_INCLUDE_DIRS}
   ${audio_msgs_INCLUDE_DIRS}
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
   $<INSTALL_INTERFACE:include>
   ${GLIB_INCLUDE_DIRS}
   ${GOBJECT_INCLUDE_DIR}
-  ${LTTNG_LIBRARIES}
 )
 
 target_link_libraries(rosgstbridge PUBLIC
@@ -99,6 +100,7 @@ target_link_libraries(rosgstbridge PUBLIC
   PkgConfig::gstreamer-audio
   PkgConfig::gstreamer-base
   PkgConfig::gstreamer-video
+  PkgConfig::lttng-ust
 )
 
 

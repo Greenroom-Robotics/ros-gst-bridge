@@ -33,6 +33,7 @@
 
 #include <gst_bridge/rosbasesink.h>
 
+#define LTTNG_UST_TRACEPOINT_DEFINE
 #include "gst_bridge_tpp.h"
 
 GST_DEBUG_CATEGORY_STATIC (rosbasesink_debug_category);
