@@ -285,18 +285,18 @@ static gboolean rosbasesink_open (RosBaseSink * sink)
   gboolean result = TRUE;
   GST_DEBUG_OBJECT (sink, "open");
 
-  sink->ros_context = std::make_shared<rclcpp::Context>();
-  sink->ros_context->init(0, NULL);    // XXX should expose the init arg list
-  auto opts = rclcpp::NodeOptions();
-  opts.context(sink->ros_context); //set a context to generate the node in
-  sink->node = std::make_shared<rclcpp::Node>(std::string(sink->node_name), std::string(sink->node_namespace), opts);
-
-  lttng_ust_tracepoint(gst_bridge, gst_sink_open, static_cast<const void *>(sink->node->get_node_base_interface()->get_rcl_node_handle()), static_cast<const void *>(sink));
-
-  auto ex_args = rclcpp::ExecutorOptions();
-  ex_args.context = sink->ros_context;
-  sink->ros_executor = std::make_shared<rclcpp::executors::SingleThreadedExecutor>(ex_args);
-  sink->ros_executor->add_node(sink->node);
+  try {
+    rclcpp::init(0, NULL, rclcpp::InitOptions(), rclcpp::SignalHandlerOptions::None);
+    sink->node = std::make_shared<rclcpp::Node>(std::string(sink->node_name), std::string(sink->node_namespace));
+    sink->ros_executor = std::make_shared<rclcpp::experimental::executors::EventsExecutor>();
+    sink->ros_executor->add_node(sink->node);
+    lttng_ust_tracepoint(gst_bridge, gst_sink_open, static_cast<const void *>(sink->node->get_node_base_interface()->get_rcl_node_handle()), static_cast<const void *>(sink));
+  }
+  catch (const std::exception &e)
+  {
+    RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "failed to create node: %s", e.what());
+    return FALSE;
+  }
 
   // allow sub-class to create publishers on sink->node
   if(sink_class->open)
@@ -319,19 +319,18 @@ static gboolean rosbasesink_close (RosBaseSink * sink)
 
   GST_DEBUG_OBJECT (sink, "close");
 
-  sink->clock.reset();
-
   //allow sub-class to clean up before destroying ros context
   if(sink_class->close)
     result = sink_class->close(sink);
 
-  // XXX do something with result
-  //XXX executor
   sink->ros_executor->cancel();
   sink->spin_thread.join();
 
+  sink->clock.reset();
   sink->node.reset();
-  sink->ros_context->shutdown("gst closing rosbasesink");
+  sink->ros_executor.reset();
+
+  rclcpp::shutdown();
   return result;
 }
 

@@ -45,7 +45,6 @@ struct _RosBaseSink
   gchar* node_namespace;
   gint64 offset_time_ns;
 
-  rclcpp::Context::SharedPtr ros_context;
   rclcpp::Executor::SharedPtr ros_executor;
   rclcpp::Node::SharedPtr node;
   rclcpp::Logger logger;
@@ -73,7 +72,7 @@ struct _RosBaseSinkClass
 
 
   /*
-   * destroy the ros publisher(s) and unregister your callbacks and timers and prepare for ros_context->shutdown()
+   * destroy the ros publisher(s) and unregister your callbacks and timers and prepare for the shutdown of the rclcpp context
    * called at gstbasesink->change_state()  GST_STATE_CHANGE_READY_TO_NULL
    * timers and reconf callbacks are currently broken, needs a new thread with an executor, patches welcome
    */
