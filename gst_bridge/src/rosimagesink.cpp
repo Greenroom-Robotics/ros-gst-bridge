@@ -59,6 +59,7 @@ enum
   PROP_ROS_TOPIC,
   PROP_ROS_FRAME_ID,
   PROP_ROS_ENCODING,
+  PROP_ROS_QOS_RELIABLE,
 };
 
 
@@ -117,6 +118,12 @@ static void rosimagesink_class_init (RosimagesinkClass * klass)
       (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS))
   );
 
+  g_object_class_install_property (object_class, PROP_ROS_QOS_RELIABLE,
+      g_param_spec_boolean ("ros-qos-reliable", "qos-reliable", "Use reliable QoS (TRUE) or best effort QoS (FALSE)",
+      TRUE,
+      (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS))
+  );
+
   //access gstreamer base sink events here
   basesink_class->set_caps = GST_DEBUG_FUNCPTR (rosimagesink_setcaps);  //gstreamer informs us what caps we're using.
 
@@ -134,6 +141,10 @@ static void rosimagesink_init (Rosimagesink * sink)
   sink->frame_id = g_strdup("image_frame");
   sink->encoding = g_strdup("");
   sink->init_caps =  g_strdup("");
+  sink->is_compressed = FALSE;
+  sink->qos_reliable = TRUE;
+  sink->pub = NULL;
+  sink->compressed_pub = NULL;
 }
 
 void rosimagesink_set_property (GObject * object, guint property_id,
@@ -167,6 +178,10 @@ void rosimagesink_set_property (GObject * object, guint property_id,
       sink->encoding = g_value_dup_string(value);
       break;
 
+    case PROP_ROS_QOS_RELIABLE:
+      sink->qos_reliable = g_value_get_boolean(value);
+      break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -192,6 +207,10 @@ void rosimagesink_get_property (GObject * object, guint property_id,
       g_value_set_string(value, sink->encoding);
       break;
 
+    case PROP_ROS_QOS_RELIABLE:
+      g_value_set_boolean(value, sink->qos_reliable);
+      break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -203,8 +222,6 @@ static gboolean rosimagesink_open (RosBaseSink * ros_base_sink)
 {
   Rosimagesink *sink = GST_ROSIMAGESINK (ros_base_sink);
   GST_DEBUG_OBJECT (sink, "open");
-  rclcpp::QoS qos = rclcpp::SensorDataQoS().reliable();  //XXX add a parameter for overrides
-  sink->pub = ros_base_sink->node->create_publisher<sensor_msgs::msg::Image>(sink->pub_topic, qos);
   return TRUE;
 }
 
@@ -213,7 +230,12 @@ static gboolean rosimagesink_close (RosBaseSink * ros_base_sink)
 {
   Rosimagesink *sink = GST_ROSIMAGESINK (ros_base_sink);
   GST_DEBUG_OBJECT (sink, "close");
-  sink->pub.reset();
+  if (sink->pub) {
+    sink->pub.reset();
+  }
+  if (sink->compressed_pub) {
+    sink->compressed_pub.reset();
+  }
   return TRUE;
 }
 
@@ -250,16 +272,12 @@ static gboolean rosimagesink_setcaps (GstBaseSink * gst_base_sink, GstCaps * cap
   if(!gst_structure_get_fraction (caps_struct, "framerate", &rate_num, &rate_den))
       RCLCPP_ERROR(ros_base_sink->logger, "setcaps missing framerate");
 
-  format_str = gst_structure_get_string(caps_struct, "format");
-
-  if(format_str)
-  {
-    format_enum = gst_video_format_from_string (format_str);
-    format_info = gst_video_format_get_info (format_enum);
-    depth = format_info->pixel_stride[0];
-
-    //allow the encoding to be overridden by parameters
-    //but update it if it's blank
+  const gchar* media_type = gst_structure_get_name(caps_struct);
+  sink->is_compressed = g_str_has_prefix(media_type, "image/");
+  
+  if (sink->is_compressed) {
+    RCLCPP_INFO(ros_base_sink->logger, "setcaps detected compressed format: %s", media_type);
+    
     if(0 == g_strcmp0(sink->init_caps, ""))
     {
       g_free(sink->init_caps);
@@ -268,27 +286,58 @@ static gboolean rosimagesink_setcaps (GstBaseSink * gst_base_sink, GstCaps * cap
     if(0 == g_strcmp0(sink->encoding, ""))
     {
       g_free(sink->encoding);
-      sink->encoding = g_strdup(gst_bridge::getRosEncoding(format_enum).c_str());
+      if (g_str_equal(media_type, "image/jpeg")) {
+        sink->encoding = g_strdup("jpeg");
+      } else if (g_str_equal(media_type, "image/png")) {
+        sink->encoding = g_strdup("png");
+      } else {
+        RCLCPP_ERROR(ros_base_sink->logger, "unsupported encoding %s", sink->encoding);
+      }
     }
+    
+    depth = 1;
+    endianness = G_LITTLE_ENDIAN;
+  } else {
+    format_str = gst_structure_get_string(caps_struct, "format");
 
-    RCLCPP_INFO(ros_base_sink->logger, "setcaps format string is %s ", format_str);
-    RCLCPP_INFO(ros_base_sink->logger, "setcaps n_components is %d", format_info->n_components);
-    RCLCPP_INFO(ros_base_sink->logger, "setcaps bits is %d", format_info->bits);
-    RCLCPP_INFO(ros_base_sink->logger, "setcaps pixel_stride is %d", depth);
-
-    if(format_info->bits < 8)
+    if(format_str)
     {
-      depth = depth/8;
-      RCLCPP_ERROR(ros_base_sink->logger, "low bits per pixel");
+      format_enum = gst_video_format_from_string (format_str);
+      format_info = gst_video_format_get_info (format_enum);
+      depth = format_info->pixel_stride[0];
+
+      //allow the encoding to be overridden by parameters
+      //but update it if it's blank
+      if(0 == g_strcmp0(sink->init_caps, ""))
+      {
+        g_free(sink->init_caps);
+        sink->init_caps = gst_caps_to_string(caps);
+      }
+      if(0 == g_strcmp0(sink->encoding, ""))
+      {
+        g_free(sink->encoding);
+        sink->encoding = g_strdup(gst_bridge::getRosEncoding(format_enum).c_str());
+      }
+
+      RCLCPP_INFO(ros_base_sink->logger, "setcaps format string is %s ", format_str);
+      RCLCPP_INFO(ros_base_sink->logger, "setcaps n_components is %d", format_info->n_components);
+      RCLCPP_INFO(ros_base_sink->logger, "setcaps bits is %d", format_info->bits);
+      RCLCPP_INFO(ros_base_sink->logger, "setcaps pixel_stride is %d", depth);
+
+      if(format_info->bits < 8)
+      {
+        depth = depth/8;
+        RCLCPP_ERROR(ros_base_sink->logger, "low bits per pixel");
+      }
+      endianness = GST_VIDEO_FORMAT_INFO_IS_LE(format_info) ? G_LITTLE_ENDIAN : G_BIG_ENDIAN;
     }
-    endianness = GST_VIDEO_FORMAT_INFO_IS_LE(format_info) ? G_LITTLE_ENDIAN : G_BIG_ENDIAN;
-  }
-  else
-  {
-    RCLCPP_ERROR(ros_base_sink->logger, "setcaps missing format");
-    if(!gst_structure_get_int (caps_struct, "endianness", &endianness))
-      RCLCPP_ERROR(ros_base_sink->logger, "setcaps missing endianness");
-    return false;
+    else
+    {
+      RCLCPP_ERROR(ros_base_sink->logger, "setcaps missing format");
+      if(!gst_structure_get_int (caps_struct, "endianness", &endianness))
+        RCLCPP_ERROR(ros_base_sink->logger, "setcaps missing endianness");
+      return false;
+    }
   }
 
 
@@ -297,7 +346,23 @@ static gboolean rosimagesink_setcaps (GstBaseSink * gst_base_sink, GstCaps * cap
   sink->height = height;
   sink->step = width * depth; //full row step size in bytes
   sink->endianness = endianness;  // XXX used without init
-  //sink->sample_rate = rate;
+
+  if(ros_base_sink->node)
+  {
+    rclcpp::QoS qos = sink->qos_reliable ? 
+      rclcpp::SensorDataQoS().reliable() : 
+      rclcpp::SensorDataQoS().best_effort();
+    
+    if (sink->is_compressed) {
+      sink->compressed_pub = ros_base_sink->node->create_publisher<sensor_msgs::msg::CompressedImage>(sink->pub_topic, qos);
+    } else {
+      sink->pub = ros_base_sink->node->create_publisher<sensor_msgs::msg::Image>(sink->pub_topic, qos);
+    }
+
+    RCLCPP_INFO(ros_base_sink->logger, "Creating %s image publisher with %s QoS", 
+            sink->is_compressed ? "compressed" : "raw",
+            sink->qos_reliable ? "reliable" : "best_effort");
+  }
 
   return true;
 }
@@ -305,8 +370,6 @@ static gboolean rosimagesink_setcaps (GstBaseSink * gst_base_sink, GstCaps * cap
 static GstFlowReturn rosimagesink_render (RosBaseSink * ros_base_sink, GstBuffer * buf, rclcpp::Time msg_time)
 {
   GstMapInfo info;
-  sensor_msgs::msg::Image msg;
-
   Rosimagesink *sink = GST_ROSIMAGESINK (ros_base_sink);
   GST_DEBUG_OBJECT (sink, "render");
 
@@ -341,25 +404,33 @@ static GstFlowReturn rosimagesink_render (RosBaseSink * ros_base_sink, GstBuffer
     msg_time = msg_time + offset_time;
   }
 
-  msg.header.stamp = msg_time;
-  msg.header.frame_id = sink->frame_id;
-
-  //auto msg = sink->pub->borrow_loaned_message();
-  //msg.get().width =
-
-  //fill the blanks
-  msg.width = sink->width;
-  msg.height = sink->height;
-  msg.encoding = sink->encoding;
-  msg.is_bigendian = (sink->endianness == G_BIG_ENDIAN);
-  msg.step = sink->step;
-
   gst_buffer_map (buf, &info, GST_MAP_READ);
-  msg.data.assign(info.data, info.data+info.size);
-  gst_buffer_unmap (buf, &info);
 
-  //publish
-  sink->pub->publish(msg);
+  if (sink->is_compressed) {
+    sensor_msgs::msg::CompressedImage compressed_msg;
+    
+    compressed_msg.header.stamp = msg_time;
+    compressed_msg.header.frame_id = sink->frame_id;
+    compressed_msg.format = sink->encoding;
+    compressed_msg.data.assign(info.data, info.data + info.size);
+    
+    gst_buffer_unmap (buf, &info);
+    sink->compressed_pub->publish(compressed_msg);
+  } else {
+    sensor_msgs::msg::Image msg;
+    
+    msg.header.stamp = msg_time;
+    msg.header.frame_id = sink->frame_id;
+    msg.width = sink->width;
+    msg.height = sink->height;
+    msg.encoding = sink->encoding;
+    msg.is_bigendian = (sink->endianness == G_BIG_ENDIAN);
+    msg.step = sink->step;
+    msg.data.assign(info.data, info.data + info.size);
+    
+    gst_buffer_unmap (buf, &info);
+    sink->pub->publish(msg);
+  }
 
   return GST_FLOW_OK;
 }

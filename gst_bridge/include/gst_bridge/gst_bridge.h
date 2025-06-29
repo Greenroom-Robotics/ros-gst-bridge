@@ -46,6 +46,14 @@
   "format = " GST_BRIDGE_GST_VIDEO_FORMAT_LIST ", "   \
   "framerate = " GST_VIDEO_FPS_RANGE ", "             \
   "width = " GST_VIDEO_SIZE_RANGE ", "                \
+  "height = " GST_VIDEO_SIZE_RANGE "; "               \
+  "image/jpeg, "                                      \
+  "framerate = " GST_VIDEO_FPS_RANGE ", "             \
+  "width = " GST_VIDEO_SIZE_RANGE ", "                \
+  "height = " GST_VIDEO_SIZE_RANGE "; "               \
+  "image/png, "                                       \
+  "framerate = " GST_VIDEO_FPS_RANGE ", "             \
+  "width = " GST_VIDEO_SIZE_RANGE ", "                \
   "height = " GST_VIDEO_SIZE_RANGE " "
 
 #define ROS_AUDIO_MSG_CAPS                            \

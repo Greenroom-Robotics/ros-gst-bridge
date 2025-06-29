@@ -28,6 +28,7 @@
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp/duration.hpp>
 #include <sensor_msgs/msg/image.hpp>
+#include <sensor_msgs/msg/compressed_image.hpp>
 
 
 G_BEGIN_DECLS
@@ -51,12 +52,15 @@ struct _Rosimagesink
   gchar* init_caps; //optional caps override (used for limited apis)
 
   rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr pub;
+  rclcpp::Publisher<sensor_msgs::msg::CompressedImage>::SharedPtr compressed_pub;
 
   int height;
   int width;
 
   size_t step;   //bytes per pixel
   gint endianness;
+  gboolean is_compressed;
+  gboolean qos_reliable;
 };
 
 struct _RosimagesinkClass
