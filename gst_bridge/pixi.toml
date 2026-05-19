@@ -38,6 +38,7 @@ gstreamer                  = "*"
 gst-plugins-base           = "*"
 glib                       = "*"
 lttng-ust                  = "*"
+zlib                       = "*"
 # Sibling on this branch — pinned to its own release version.
 audio_msgs                 = "==0.1.0"
 
