@@ -1,0 +1,39 @@
+[workspace]
+name = "audio_msgs"
+channels = [
+  "http://localhost:8000",
+  "https://prefix.dev/robostack-kilted",
+  "https://prefix.dev/conda-forge",
+]
+platforms = ["linux-64", "linux-aarch64"]
+preview = ["pixi-build"]
+
+[dependencies]
+audio_msgs = { path = "." }
+
+[package]
+name = "audio_msgs"
+version = "0.1.0"
+description = "Message formats describing raw audio"
+license = "Apache-2.0"
+authors = ["Greenroom Robotics <software-team@greenroomrobotics.com>"]
+
+[package.build.backend]
+name = "pixi-build-ros-gr"
+version = "*"
+
+[package.build.config]
+mode = "pixi-native"
+build-type = "ament_idl"
+distro = "kilted"
+
+[package.host-dependencies]
+ros-kilted-ament-cmake     = "*"
+ros-kilted-std-msgs        = "*"
+ros-kilted-sensor-msgs     = "*"
+ros-kilted-builtin-interfaces = "*"
+
+[package.run-dependencies]
+ros-kilted-std-msgs        = "*"
+ros-kilted-sensor-msgs     = "*"
+ros-kilted-builtin-interfaces = "*"
