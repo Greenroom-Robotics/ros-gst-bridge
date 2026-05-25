@@ -26,6 +26,11 @@ version = "*"
 mode = "pixi-native"
 build-type = "ament_cmake"
 distro = "kilted"
+# Bumped to force a rebuild after the plugin install path moved from
+# lib/gst_bridge/ to lib/gstreamer-1.0/ in #3. Without this the buildfarm
+# sees gst_bridge==0.1.0 build=0 already in the channel and skips
+# publishing the new artifact.
+build-number = 1
 
 [package.host-dependencies]
 ros-kilted-ament-cmake     = "*"
