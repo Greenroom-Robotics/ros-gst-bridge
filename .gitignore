@@ -6,7 +6,6 @@
 
 # pixi
 .pixi/
-pixi.lock
 
 # CMake
 CMakeLists.txt.user
