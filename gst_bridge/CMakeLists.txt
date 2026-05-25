@@ -150,9 +150,8 @@ install(TARGETS ${PROJECT_NAME}
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin)
 
-# note the nonstandard install location for the gst plugin
 install(TARGETS rosgstbridge
-  DESTINATION lib/${PROJECT_NAME}
+  DESTINATION lib/gstreamer-1.0
 )
 
 ament_package(
