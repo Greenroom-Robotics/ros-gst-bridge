@@ -26,7 +26,7 @@ gst_pipeline_node:
       - gst_bridge
 
     gst_plugin_ros_package_subdirs:
-      gst_bridge: lib/gst_bridge/
+      gst_bridge: lib/gstreamer-1.0/
 
 
 
