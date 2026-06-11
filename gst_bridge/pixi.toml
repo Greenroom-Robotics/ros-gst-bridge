@@ -1,7 +1,7 @@
 [workspace]
 name = "gst_bridge"
 channels = [
-  "http://localhost:8000/general",
+  "http://localhost:12222/general",
   "https://prefix.dev/robostack-kilted",
   "https://prefix.dev/conda-forge",
 ]
@@ -12,44 +12,71 @@ preview = ["pixi-build"]
 gst_bridge = { path = "." }
 
 [package]
-name = "gst_bridge"
-version = "0.1.0"
+name        = "gst_bridge"
+version     = "0.1.0"
 description = "Run ROS nodes in a gstreamer pipeline"
-license = "LGPL-3.0-or-later"
-authors = ["Greenroom Robotics <software-team@greenroomrobotics.com>"]
+license     = "LGPL-3.0-or-later"
+authors     = ["Greenroom Robotics <software-team@greenroomrobotics.com>"]
 
 [package.build.backend]
-name = "pixi-build-ros-gr"
-version = "*"
+name    = "pixi-build-ros-gr"
+version = ">=0.4,<0.5"
 
 [package.build.config]
-mode = "pixi-native"
-build-type = "ament_cmake"
-distro = "kilted"
+mode         = "pixi-native"
+build-type   = "ament_cmake"
+distro       = "kilted"
 build-number = 3
 
 [package.host-dependencies]
-ros-kilted-ament-cmake     = "*"
-ros-kilted-rclcpp          = "*"
-ros-kilted-std-msgs        = "*"
-ros-kilted-sensor-msgs     = "*"
+ros-kilted-ament-cmake        = "*"
+ros-kilted-rclcpp             = "*"
+ros-kilted-std-msgs           = "*"
+ros-kilted-sensor-msgs        = "*"
 ros-kilted-builtin-interfaces = "*"
-pkg-config                 = "*"
-gstreamer                  = "*"
-gst-plugins-base           = "*"
-glib                       = "*"
-lttng-ust                  = "*"
-zlib                       = "*"
+pkg-config                    = "*"
+gstreamer                     = "*"
+gst-plugins-base              = "*"
+glib                          = "*"
+lttng-ust                     = "*"
+zlib                          = "*"
 # Sibling on this branch — pinned to its own release version.
-audio_msgs                 = "==0.1.0"
+audio_msgs = "==0.1.0"
 
 [package.run-dependencies]
-ros-kilted-rclcpp          = "*"
-ros-kilted-std-msgs        = "*"
-ros-kilted-sensor-msgs     = "*"
-gstreamer                  = "*"
-gst-plugins-base           = "*"
-gst-plugins-good           = "*"
-glib                       = "*"
-lttng-ust                  = "*"
-audio_msgs                 = "==0.1.0"
+ros-kilted-rclcpp      = "*"
+ros-kilted-std-msgs    = "*"
+ros-kilted-sensor-msgs = "*"
+gstreamer              = "*"
+gst-plugins-base       = "*"
+gst-plugins-good       = "*"
+glib                   = "*"
+lttng-ust              = "*"
+audio_msgs             = "==0.1.0"
+
+# Test env builds the package from source with colcon (deb parity),
+# so it needs the build (host) deps as well as the test deps.
+[feature.tests.dependencies]
+# conda toolchain: keeps colcon include/link paths inside the env
+cxx-compiler                  = "*"
+cmake                         = "*"
+make                          = "*"
+pkg-config                    = "*"
+ros-kilted-ament-cmake        = "*"
+ros-kilted-rclcpp             = "*"
+ros-kilted-std-msgs           = "*"
+ros-kilted-sensor-msgs        = "*"
+ros-kilted-builtin-interfaces = "*"
+gstreamer                     = "*"
+gst-plugins-base              = "*"
+glib                          = "*"
+lttng-ust                     = "*"
+zlib                          = "*"
+audio_msgs                    = "==0.1.0"
+colcon-common-extensions      = "*"
+
+[feature.tests.tasks]
+test = "colcon build && (LD_PRELOAD=$CONDA_PREFIX/lib/libpython3.so colcon test --event-handlers console_direct+ || true) && colcon test-result --all --verbose"
+
+[environments]
+tests = { features = ["tests"], no-default-feature = true }
