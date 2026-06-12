@@ -9,7 +9,8 @@ platforms = ["linux-64", "linux-aarch64"]
 preview = ["pixi-build"]
 
 [dependencies]
-gst_pipeline = { path = "." }
+ros-kilted-desktop = "*"
+gst_pipeline       = { path = "." }
 
 [package]
 name        = "gst_pipeline"
@@ -45,28 +46,33 @@ gst-plugins-good              = "*"
 # Sibling — pinned to its own release version.
 gst_bridge = "==0.1.0"
 
-# Test env builds the package from source with colcon (deb parity),
-# so it needs the build (host) deps as well as the test deps.
-[feature.tests.dependencies]
-python                        = "*"
-hatchling                     = "*"
-ros-kilted-rclpy              = "*"
-ros-kilted-std-msgs           = "*"
-ros-kilted-diagnostic-updater = "*"
-ros-kilted-diagnostic-msgs    = "*"
-gst-python                    = "*"
-gstreamer                     = "*"
-gst-plugins-base              = "*"
-gst-plugins-good              = "*"
-gst_bridge                    = "==0.1.0"
-ros-kilted-ament-copyright    = "*"
-ros-kilted-ament-flake8       = "*"
-ros-kilted-ament-pep257       = "*"
-pytest                        = "*"
-colcon-common-extensions      = "*"
+# Build-only tools the run-closure (pulled in via the default feature's path
+# dependency) doesn't provide. Everything else — ament-cmake, the rosidl stack,
+# the message packages — comes transitively, so it isn't re-listed here.
+[feature.dev.dependencies]
+colcon-common-extensions = "*"
 
-[feature.tests.tasks]
-test = "colcon build && (LD_PRELOAD=$CONDA_PREFIX/lib/libpython3.so colcon test --event-handlers console_direct+ || true) && colcon test-result --all --verbose"
+[feature.dev.tasks]
+build = "colcon build"
+
+# Tests extend dev: same build env, plus lint tooling and the test task.
+[feature.tests.dependencies]
+ros-kilted-ament-copyright = "*"
+ros-kilted-ament-flake8    = "*"
+ros-kilted-ament-pep257    = "*"
+pytest                     = "*"
+
+# `test` runs build -> colcon-test -> test-result as a dependency chain. A
+# failing step stops the chain and fails the task, so a build break or a test
+# failure both surface — no exit codes to juggle.
+[feature.tests.tasks.colcon-test]
+cmd        = "LD_PRELOAD=$CONDA_PREFIX/lib/libpython3.so colcon test --event-handlers console_direct+"
+depends-on = ["build"]
+
+[feature.tests.tasks.test]
+cmd        = "colcon test-result --all --verbose"
+depends-on = ["colcon-test"]
 
 [environments]
-tests = { features = ["tests"], no-default-feature = true }
+dev   = { features = ["dev"] }
+tests = { features = ["dev", "tests"] }

@@ -54,29 +54,34 @@ glib                   = "*"
 lttng-ust              = "*"
 audio_msgs             = "==0.1.0"
 
-# Test env builds the package from source with colcon (deb parity),
-# so it needs the build (host) deps as well as the test deps.
-[feature.tests.dependencies]
-# conda toolchain: keeps colcon include/link paths inside the env
-cxx-compiler                  = "*"
-cmake                         = "*"
-make                          = "*"
-pkg-config                    = "*"
-ros-kilted-ament-cmake        = "*"
-ros-kilted-rclcpp             = "*"
-ros-kilted-std-msgs           = "*"
-ros-kilted-sensor-msgs        = "*"
-ros-kilted-builtin-interfaces = "*"
-gstreamer                     = "*"
-gst-plugins-base              = "*"
-glib                          = "*"
-lttng-ust                     = "*"
-zlib                          = "*"
-audio_msgs                    = "==0.1.0"
-colcon-common-extensions      = "*"
+# Build-only tools the run-closure (pulled in via the default feature's path
+# dependency) doesn't provide. Everything else — ament-cmake, the rosidl stack,
+# the message packages — comes transitively, so it isn't re-listed here.
+[feature.dev.dependencies]
+colcon-common-extensions              = "*"
+cxx-compiler                          = "*"
+make                                  = "*"
+pkg-config                            = "*"
+ros-kilted-rosidl-default-generators  = "*"
 
-[feature.tests.tasks]
-test = "colcon build && (LD_PRELOAD=$CONDA_PREFIX/lib/libpython3.so colcon test --event-handlers console_direct+ || true) && colcon test-result --all --verbose"
+[feature.dev.tasks]
+build = "colcon build"
+
+# Tests extend dev: same build env, plus lint tooling and the test task.
+[feature.tests.dependencies]
+ros-kilted-ament-lint-auto = "*"
+
+# `test` runs build -> colcon-test -> test-result as a dependency chain. A
+# failing step stops the chain and fails the task, so a build break or a test
+# failure both surface — no exit codes to juggle.
+[feature.tests.tasks.colcon-test]
+cmd        = "LD_PRELOAD=$CONDA_PREFIX/lib/libpython3.so colcon test --event-handlers console_direct+"
+depends-on = ["build"]
+
+[feature.tests.tasks.test]
+cmd        = "colcon test-result --all --verbose"
+depends-on = ["colcon-test"]
 
 [environments]
-tests = { features = ["tests"], no-default-feature = true }
+dev   = { features = ["dev"] }
+tests = { features = ["dev", "tests"] }
