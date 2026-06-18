@@ -49,18 +49,15 @@ gst_bridge = "==0.1.0"
 # Build-only tools the run-closure (pulled in via the default feature's path
 # dependency) doesn't provide. Everything else — ament-cmake, the rosidl stack,
 # the message packages — comes transitively, so it isn't re-listed here.
-[feature.dev.dependencies]
-colcon-common-extensions = "*"
-
-[feature.dev.tasks]
-build = "colcon build"
-
-# Tests extend dev: same build env, plus lint tooling and the test task.
 [feature.tests.dependencies]
+ros-dev-tools-meta         = "*"
 ros-kilted-ament-copyright = "*"
 ros-kilted-ament-flake8    = "*"
 ros-kilted-ament-pep257    = "*"
 pytest                     = "*"
+
+[feature.tests.tasks]
+build = "colcon build"
 
 # `test` runs build -> colcon-test -> test-result as a dependency chain. A
 # failing step stops the chain and fails the task, so a build break or a test
@@ -74,5 +71,4 @@ cmd        = "colcon test-result --all --verbose"
 depends-on = ["colcon-test"]
 
 [environments]
-dev   = { features = ["dev"] }
-tests = { features = ["dev", "tests"] }
+tests = { features = ["tests"] }
