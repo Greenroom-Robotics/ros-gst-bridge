@@ -12,55 +12,55 @@ preview = ["pixi-build"]
 gst_bridge = { path = "." }
 
 [package]
-name        = "gst_bridge"
-version     = "0.1.0"
+name = "gst_bridge"
+version = "0.1.0"
 description = "Run ROS nodes in a gstreamer pipeline"
-license     = "LGPL-3.0-or-later"
-authors     = ["Greenroom Robotics <software-team@greenroomrobotics.com>"]
+license = "LGPL-3.0-or-later"
+authors = ["Greenroom Robotics <software-team@greenroomrobotics.com>"]
 
 [package.build.backend]
-name    = "pixi-build-ros-gr"
-version = ">=0.4,<0.5"
+name = "pixi-build-ros-gr"
+version = "*"
 
 [package.build.config]
-mode         = "pixi-native"
-build-type   = "ament_cmake"
-distro       = "kilted"
+mode = "pixi-native"
+build-type = "ament_cmake"
+distro = "kilted"
 build-number = 3
 
 [package.host-dependencies]
-ros-kilted-ament-cmake        = "*"
-ros-kilted-rclcpp             = "*"
-ros-kilted-std-msgs           = "*"
-ros-kilted-sensor-msgs        = "*"
+ros-kilted-ament-cmake = "*"
+ros-kilted-rclcpp = "*"
+ros-kilted-std-msgs = "*"
+ros-kilted-sensor-msgs = "*"
 ros-kilted-builtin-interfaces = "*"
-pkg-config                    = "*"
-gstreamer                     = "*"
-gst-plugins-base              = "*"
-glib                          = "*"
-lttng-ust                     = "*"
-zlib                          = "*"
+pkg-config = "*"
+gstreamer = "*"
+gst-plugins-base = "*"
+glib = "*"
+lttng-ust = "*"
+zlib = "*"
 # Sibling on this branch — pinned to its own release version.
 audio_msgs = "==0.1.0"
 
 [package.run-dependencies]
-ros-kilted-rclcpp      = "*"
-ros-kilted-std-msgs    = "*"
+ros-kilted-rclcpp = "*"
+ros-kilted-std-msgs = "*"
 ros-kilted-sensor-msgs = "*"
-gstreamer              = "*"
-gst-plugins-base       = "*"
-gst-plugins-good       = "*"
-glib                   = "*"
-lttng-ust              = "*"
-audio_msgs             = "==0.1.0"
+gstreamer = "*"
+gst-plugins-base = "*"
+gst-plugins-good = "*"
+glib = "*"
+lttng-ust = "*"
+audio_msgs = "==0.1.0"
 
 # Build-only tools the run-closure (pulled in via the default feature's path
 # dependency) doesn't provide. Everything else — ament-cmake, the rosidl stack,
 # the message packages — comes transitively, so it isn't re-listed here.
 [feature.tests.dependencies]
-ros-dev-tools-meta                    = "*"
-ros-kilted-rosidl-default-generators  = "*"
-ros-kilted-ament-lint-auto            = "*"
+ros-dev-tools-meta = "*"
+ros-kilted-rosidl-default-generators = "*"
+ros-kilted-ament-lint-auto = "*"
 
 [feature.tests.tasks]
 build = "colcon build"
@@ -69,11 +69,11 @@ build = "colcon build"
 # failing step stops the chain and fails the task, so a build break or a test
 # failure both surface — no exit codes to juggle.
 [feature.tests.tasks.colcon-test]
-cmd        = "bash -c 'colcon test --event-handlers console_direct+ || [ $? -eq 5 ]'"
+cmd = "bash -c 'colcon test --event-handlers console_direct+ || [ $? -eq 5 ]'"
 depends-on = ["build"]
 
 [feature.tests.tasks.test]
-cmd        = "colcon test-result --all --verbose"
+cmd = "colcon test-result --all --verbose"
 depends-on = ["colcon-test"]
 
 [environments]
