@@ -20,7 +20,7 @@ authors = ["Greenroom Robotics <software-team@greenroomrobotics.com>"]
 
 [package.build.backend]
 name = "pixi-build-ros-gr"
-version = "*"
+version = ">=0.5,<0.6"
 
 [package.build.config]
 mode = "pixi-native"
@@ -40,8 +40,8 @@ gst-plugins-base = "*"
 glib = "*"
 lttng-ust = "*"
 zlib = "*"
-# Sibling on this branch — pinned to its own release version.
-audio_msgs = "==0.1.0"
+# Sibling on this branch — path dep within this repo.
+audio_msgs = { path = "../audio_msgs" }
 
 [package.run-dependencies]
 ros-kilted-rclcpp = "*"
@@ -52,7 +52,7 @@ gst-plugins-base = "*"
 gst-plugins-good = "*"
 glib = "*"
 lttng-ust = "*"
-audio_msgs = "==0.1.0"
+audio_msgs = { path = "../audio_msgs" }
 
 # Build-only tools the run-closure (pulled in via the default feature's path
 # dependency) doesn't provide. Everything else — ament-cmake, the rosidl stack,
