@@ -27,11 +27,16 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
-      - uses: greenroom-robotics/mise/.github/actions/release@v5
+      - uses: greenroom-robotics/mise/.github/actions/release@v8
         with:
           package: ${{ inputs.package }}
           changelog: ${{ inputs.changelog }}
           package-dir: .
+          # This repo has no main/master — the action's default
+          # (main,master,alpha) matches nothing here, so semantic-release could
+          # never release. greenroom/main is the GR release line; ros2 is the
+          # inherited upstream branch.
+          release-branches: greenroom/main
           gh-app-client-id: ${{ secrets.GH_APP_CLIENT_ID }}
           gh-app-private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
           azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}

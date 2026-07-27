@@ -4,8 +4,9 @@ on:
   pull_request:
   push:
     branches:
-      - main
-      - master
+      # greenroom/main is the GR release line; ros2 is the inherited upstream
+      # branch. This repo has no main/master.
+      - greenroom/main
       - ros2
 
 permissions:
