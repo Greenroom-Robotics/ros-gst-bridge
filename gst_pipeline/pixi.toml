@@ -40,8 +40,8 @@ ros-kilted-std-msgs = "*"
 ros-kilted-diagnostic-updater = "*"
 ros-kilted-diagnostic-msgs = "*"
 gst-python = "*"
-gstreamer = "*"
-gst-plugins-base = "*"
+gstreamer = ">=1.26,<1.27"
+gst-plugins-base = ">=1.26,<1.27"
 gst-plugins-good = "*"
 # Sibling — path dep within this repo.
 gst_bridge = { path = "../gst_bridge" }
