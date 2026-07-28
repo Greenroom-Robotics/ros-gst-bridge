@@ -164,3 +164,8 @@ Makefile
 # Clion
 .idea/
 cmake-build-debug
+
+# colcon build output
+build/
+install/
+log/
