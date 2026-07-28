@@ -10,7 +10,7 @@ preview = ["pixi-build"]
 
 [dependencies]
 ros-kilted-desktop = "*"
-audio_msgs = { path = "." }
+audio_msgs = { path = ".", extras = ["test"] }
 
 [package]
 name = "audio_msgs"
@@ -40,27 +40,24 @@ ros-kilted-std-msgs = "*"
 ros-kilted-sensor-msgs = "*"
 ros-kilted-builtin-interfaces = "*"
 
-# Build-only tools the run-closure (pulled in via the default feature's path
-# dependency) doesn't provide. Everything else — ament-cmake, the rosidl stack,
+# Build-only tools the run-closure (pulled in via the path dependency on this
+# package) doesn't provide. Everything else — ament-cmake, the rosidl stack,
 # the message packages — comes transitively, so it isn't re-listed here.
-[feature.tests.dependencies]
+[package.extra-dependencies.test]
 ros-dev-tools-meta = "*"
 ros-kilted-rosidl-default-generators = "*"
 ros-kilted-ament-lint-auto = "*"
 
-[feature.tests.tasks]
+[tasks]
 build = "colcon build"
 
 # `test` runs build -> colcon-test -> test-result as a dependency chain. A
 # failing step stops the chain and fails the task, so a build break or a test
 # failure both surface — no exit codes to juggle.
-[feature.tests.tasks.colcon-test]
+[tasks.colcon-test]
 cmd = "bash -c 'colcon test --event-handlers console_direct+ || [ $? -eq 5 ]'"
 depends-on = ["build"]
 
-[feature.tests.tasks.test]
+[tasks.test]
 cmd = "colcon test-result --all --verbose"
 depends-on = ["colcon-test"]
-
-[environments]
-tests = { features = ["tests"] }
