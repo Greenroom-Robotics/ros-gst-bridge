@@ -1,7 +1,7 @@
 [workspace]
 name = "gst_bridge"
 channels = [
-  "http://localhost:12222/general",
+  "az://stgrcondachannel.blob.core.windows.net/general",
   "https://prefix.dev/robostack-kilted",
   "https://prefix.dev/conda-forge",
 ]

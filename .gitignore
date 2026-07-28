@@ -164,5 +164,3 @@ Makefile
 # Clion
 .idea/
 cmake-build-debug
-# pixi
-pixi.lock
