@@ -1,7 +1,7 @@
 [workspace]
 name = "audio_msgs"
 channels = [
-  "http://localhost:12222/general",
+  "az://stgrcondachannel.blob.core.windows.net/general",
   "https://prefix.dev/robostack-kilted",
   "https://prefix.dev/conda-forge",
 ]
@@ -9,19 +9,18 @@ platforms = ["linux-64", "linux-aarch64"]
 preview = ["pixi-build"]
 
 [dependencies]
-ros-kilted-desktop = "*"
-audio_msgs = { path = "." }
+audio_msgs = { path = ".", extras = ["test"] }
 
 [package]
 name = "audio_msgs"
-version = "0.1.0"
+version = "0.1.1"
 description = "Message formats describing raw audio"
 license = "Apache-2.0"
 authors = ["Greenroom Robotics <software-team@greenroomrobotics.com>"]
 
 [package.build.backend]
 name = "pixi-build-ros-gr"
-version = "*"
+version = ">=0.5,<0.6"
 
 [package.build.config]
 mode = "pixi-native"
@@ -40,27 +39,21 @@ ros-kilted-std-msgs = "*"
 ros-kilted-sensor-msgs = "*"
 ros-kilted-builtin-interfaces = "*"
 
-# Build-only tools the run-closure (pulled in via the default feature's path
-# dependency) doesn't provide. Everything else — ament-cmake, the rosidl stack,
-# the message packages — comes transitively, so it isn't re-listed here.
-[feature.tests.dependencies]
+[package.extra-dependencies.test]
 ros-dev-tools-meta = "*"
 ros-kilted-rosidl-default-generators = "*"
 ros-kilted-ament-lint-auto = "*"
 
-[feature.tests.tasks]
+[tasks]
 build = "colcon build"
 
 # `test` runs build -> colcon-test -> test-result as a dependency chain. A
 # failing step stops the chain and fails the task, so a build break or a test
 # failure both surface — no exit codes to juggle.
-[feature.tests.tasks.colcon-test]
+[tasks.colcon-test]
 cmd = "bash -c 'colcon test --event-handlers console_direct+ || [ $? -eq 5 ]'"
 depends-on = ["build"]
 
-[feature.tests.tasks.test]
+[tasks.test]
 cmd = "colcon test-result --all --verbose"
 depends-on = ["colcon-test"]
-
-[environments]
-tests = { features = ["tests"] }

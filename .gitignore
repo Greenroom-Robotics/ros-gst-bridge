@@ -164,5 +164,8 @@ Makefile
 # Clion
 .idea/
 cmake-build-debug
-# pixi
-pixi.lock
+
+# colcon build output
+build/
+install/
+log/
