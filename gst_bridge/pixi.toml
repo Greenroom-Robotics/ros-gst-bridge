@@ -35,10 +35,8 @@ ros-kilted-std-msgs = "*"
 ros-kilted-sensor-msgs = "*"
 ros-kilted-builtin-interfaces = "*"
 pkg-config = "*"
-# Capped below 1.28.5 to stay installable with the rest of the GR closure,
-# which caps there too (gst-plugins-ugly tops out at 1.28.4). The generated
-# run-export follows whatever resolves here, so an uncapped 1.28.5 build would
-# export >=1.28.5 and become uninstallable alongside greenstream.
+# gst-plugins-ugly (x264enc) tops out at 1.28.4, and the run-export follows
+# whatever resolves here
 gstreamer = "<1.28.5"
 gst-plugins-base = "<1.28.5"
 glib = "*"
@@ -50,10 +48,6 @@ audio_msgs = { path = "../audio_msgs" }
 ros-kilted-rclcpp = "*"
 ros-kilted-std-msgs = "*"
 ros-kilted-sensor-msgs = "*"
-# Capped below 1.28.5 to stay installable with the rest of the GR closure,
-# which caps there too (gst-plugins-ugly tops out at 1.28.4). The generated
-# run-export follows whatever resolves here, so an uncapped 1.28.5 build would
-# export >=1.28.5 and become uninstallable alongside greenstream.
 gstreamer = "<1.28.5"
 gst-plugins-base = "<1.28.5"
 gst-plugins-good = "*"
@@ -65,19 +59,13 @@ audio_msgs = { path = "../audio_msgs" }
 ros-dev-tools-meta = "*"
 ros-kilted-rosidl-default-generators = "*"
 ros-kilted-ament-lint-auto = "*"
-# gstreamer-audio-1.0.pc has `Requires.private: gstreamer-tag-1.0, zlib`, and
-# pkg-config refuses a module whose private requires are unresolvable. Without
-# zlib.pc here the CMake `pkg_search_module(gstreamer-audio ...)` fails even
-# though libz itself is present. It's in host-dependencies already, but those
-# aren't part of the run closure the default env installs.
+# gstreamer-audio-1.0.pc needs zlib.pc for its Requires.private
 zlib = "*"
 
 [tasks]
 build = "colcon build"
 
-# `test` runs build -> colcon-test -> test-result as a dependency chain. A
-# failing step stops the chain and fails the task, so a build break or a test
-# failure both surface — no exit codes to juggle.
+# exit 5 = no tests found
 [tasks.colcon-test]
 cmd = "bash -c 'colcon test --event-handlers console_direct+ || [ $? -eq 5 ]'"
 depends-on = ["build"]
