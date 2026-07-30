@@ -9,19 +9,23 @@ platforms = ["linux-64", "linux-aarch64"]
 preview = ["pixi-build"]
 
 [dependencies]
-ros-kilted-desktop = "*"
+# No ros-kilted-desktop here: the colcon build and tests get their tooling from
+# the `test` extra's ros-dev-tools-meta, and desktop pulls turtlesim -> qt-main,
+# which only accepts the gst-plugins-base 1.26 series. That dragged the whole env
+# back to 1.26 while gst_bridge builds against 1.28, so the two could not be
+# resolved together.
 gst_pipeline = { path = ".", extras = ["test"] }
 
 [package]
 name = "gst_pipeline"
-version = "0.1.0"
+version = "0.1.1"
 description = "Run GStreamer pipelines in ROS"
 license = "LGPL-3.0-or-later"
 authors = ["Greenroom Robotics <software-team@greenroomrobotics.com>"]
 
 [package.build.backend]
 name = "pixi-build-ros-gr"
-version = "*"
+version = ">=0.5,<0.6"
 
 [package.build.config]
 mode = "pixi-native"
@@ -40,11 +44,16 @@ ros-kilted-std-msgs = "*"
 ros-kilted-diagnostic-updater = "*"
 ros-kilted-diagnostic-msgs = "*"
 gst-python = "*"
-gstreamer = "*"
-gst-plugins-base = "*"
+# Capped below 1.28.5 to stay installable with the rest of the GR closure,
+# which caps there too (gst-plugins-ugly tops out at 1.28.4). The generated
+# run-export follows whatever resolves here, so an uncapped 1.28.5 build would
+# export >=1.28.5 and become uninstallable alongside greenstream.
+gstreamer = "<1.28.5"
+gst-plugins-base = "<1.28.5"
 gst-plugins-good = "*"
-# Sibling — pinned to its own release version.
-gst_bridge = "==0.1.0"
+# Sibling in this repo — path dep, so a version bump needs no pin chasing
+# and the buildfarm never has to order the two builds.
+gst_bridge = { path = "../gst_bridge" }
 
 # Build-only tools the run-closure (pulled in via the path dependency on this
 # package) doesn't provide. Everything else — ament-cmake, the rosidl stack,

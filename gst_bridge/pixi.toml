@@ -13,14 +13,14 @@ gst_bridge = { path = ".", extras = ["test"] }
 
 [package]
 name = "gst_bridge"
-version = "0.1.0"
+version = "0.1.1"
 description = "Run ROS nodes in a gstreamer pipeline"
 license = "LGPL-3.0-or-later"
 authors = ["Greenroom Robotics <software-team@greenroomrobotics.com>"]
 
 [package.build.backend]
 name = "pixi-build-ros-gr"
-version = "*"
+version = ">=0.5,<0.6"
 
 [package.build.config]
 mode = "pixi-native"
@@ -35,24 +35,33 @@ ros-kilted-std-msgs = "*"
 ros-kilted-sensor-msgs = "*"
 ros-kilted-builtin-interfaces = "*"
 pkg-config = "*"
-gstreamer = "*"
-gst-plugins-base = "*"
+# Capped below 1.28.5 to stay installable with the rest of the GR closure,
+# which caps there too (gst-plugins-ugly tops out at 1.28.4). The generated
+# run-export follows whatever resolves here, so an uncapped 1.28.5 build would
+# export >=1.28.5 and become uninstallable alongside greenstream.
+gstreamer = "<1.28.5"
+gst-plugins-base = "<1.28.5"
 glib = "*"
 lttng-ust = "*"
 zlib = "*"
-# Sibling on this branch — pinned to its own release version.
-audio_msgs = "==0.1.0"
+# Sibling in this repo — path dep, so a version bump needs no pin chasing
+# and the buildfarm never has to order the two builds.
+audio_msgs = { path = "../audio_msgs" }
 
 [package.run-dependencies]
 ros-kilted-rclcpp = "*"
 ros-kilted-std-msgs = "*"
 ros-kilted-sensor-msgs = "*"
-gstreamer = "*"
-gst-plugins-base = "*"
+# Capped below 1.28.5 to stay installable with the rest of the GR closure,
+# which caps there too (gst-plugins-ugly tops out at 1.28.4). The generated
+# run-export follows whatever resolves here, so an uncapped 1.28.5 build would
+# export >=1.28.5 and become uninstallable alongside greenstream.
+gstreamer = "<1.28.5"
+gst-plugins-base = "<1.28.5"
 gst-plugins-good = "*"
 glib = "*"
 lttng-ust = "*"
-audio_msgs = "==0.1.0"
+audio_msgs = { path = "../audio_msgs" }
 
 # Build-only tools the run-closure (pulled in via the path dependency on this
 # package) doesn't provide. Everything else — ament-cmake, the rosidl stack,
