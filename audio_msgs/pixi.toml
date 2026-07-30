@@ -9,7 +9,6 @@ platforms = ["linux-64", "linux-aarch64"]
 preview = ["pixi-build"]
 
 [dependencies]
-ros-kilted-desktop = "*"
 audio_msgs = { path = ".", extras = ["test"] }
 
 [package]
@@ -40,9 +39,6 @@ ros-kilted-std-msgs = "*"
 ros-kilted-sensor-msgs = "*"
 ros-kilted-builtin-interfaces = "*"
 
-# Build-only tools the run-closure (pulled in via the path dependency on this
-# package) doesn't provide. Everything else — ament-cmake, the rosidl stack,
-# the message packages — comes transitively, so it isn't re-listed here.
 [package.extra-dependencies.test]
 ros-dev-tools-meta = "*"
 ros-kilted-rosidl-default-generators = "*"

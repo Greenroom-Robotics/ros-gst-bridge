@@ -9,11 +9,6 @@ platforms = ["linux-64", "linux-aarch64"]
 preview = ["pixi-build"]
 
 [dependencies]
-# No ros-kilted-desktop here: the colcon build and tests get their tooling from
-# the `test` extra's ros-dev-tools-meta, and desktop pulls turtlesim -> qt-main,
-# which only accepts the gst-plugins-base 1.26 series. That dragged the whole env
-# back to 1.26 while gst_bridge builds against 1.28, so the two could not be
-# resolved together.
 gst_pipeline = { path = ".", extras = ["test"] }
 
 [package]
@@ -51,13 +46,8 @@ gst-python = "*"
 gstreamer = "<1.28.5"
 gst-plugins-base = "<1.28.5"
 gst-plugins-good = "*"
-# Sibling in this repo — path dep, so a version bump needs no pin chasing
-# and the buildfarm never has to order the two builds.
 gst_bridge = { path = "../gst_bridge" }
 
-# Build-only tools the run-closure (pulled in via the path dependency on this
-# package) doesn't provide. Everything else — ament-cmake, the rosidl stack,
-# the message packages — comes transitively, so it isn't re-listed here.
 [package.extra-dependencies.test]
 ros-dev-tools-meta = "*"
 ros-kilted-ament-copyright = "*"
