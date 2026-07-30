@@ -39,10 +39,8 @@ ros-kilted-std-msgs = "*"
 ros-kilted-diagnostic-updater = "*"
 ros-kilted-diagnostic-msgs = "*"
 gst-python = "*"
-# Capped below 1.28.5 to stay installable with the rest of the GR closure,
-# which caps there too (gst-plugins-ugly tops out at 1.28.4). The generated
-# run-export follows whatever resolves here, so an uncapped 1.28.5 build would
-# export >=1.28.5 and become uninstallable alongside greenstream.
+# gst-plugins-ugly (x264enc) tops out at 1.28.4, and the run-export follows
+# whatever resolves here
 gstreamer = "<1.28.5"
 gst-plugins-base = "<1.28.5"
 gst-plugins-good = "*"
@@ -58,9 +56,7 @@ pytest = "*"
 [tasks]
 build = "colcon build"
 
-# `test` runs build -> colcon-test -> test-result as a dependency chain. A
-# failing step stops the chain and fails the task, so a build break or a test
-# failure both surface — no exit codes to juggle.
+# exit 5 = no tests found
 [tasks.colcon-test]
 cmd = "bash -c 'colcon test --event-handlers console_direct+ || [ $? -eq 5 ]'"
 depends-on = ["build"]
